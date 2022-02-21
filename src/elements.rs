@@ -349,6 +349,81 @@ impl<'a> Iterator for WayRefIter<'a> {
 
 impl<'a> ExactSizeIterator for WayRefIter<'a> {}
 
+pub struct WayNodeLocation {
+    lat: i64,
+    lon: i64,
+}
+
+/// A node location that contains latitude and longitude coordinates.
+impl WayNodeLocation {
+    /// Returns the latitude coordinate in degrees.
+    pub fn lat(&self) -> f64 {
+        1e-9 * self.nano_lat() as f64
+    }
+
+    /// Returns the latitude coordinate in nanodegrees (10⁻⁹).
+    pub fn nano_lat(&self) -> i64 {
+        self.lat
+    }
+
+    /// Returns the latitude coordinate in decimicrodegrees (10⁻⁷).
+    pub fn decimicro_lat(&self) -> i32 {
+        (self.nano_lat() / 100) as i32
+    }
+
+    /// Returns the longitude coordinate in degrees.
+    pub fn lon(&self) -> f64 {
+        1e-9 * self.nano_lon() as f64
+    }
+
+    /// Returns the longitude in nanodegrees (10⁻⁹).
+    pub fn nano_lon(&self) -> i64 {
+        self.lon
+    }
+
+    /// Returns the longitude coordinate in decimicrodegrees (10⁻⁷).
+    pub fn decimicro_lon(&self) -> i32 {
+        (self.nano_lon() / 100) as i32
+    }
+}
+
+/// An iterator over the node locations of a way.
+/// Each element is a pair of coordinates consisting of latitude and longitude.
+#[derive(Clone, Debug)]
+pub struct WayNodeLocationsIter<'a> {
+    block: &'a osmformat::PrimitiveBlock,
+    dlats: std::slice::Iter<'a, i64>,
+    dlons: std::slice::Iter<'a, i64>,
+    clat: i64,
+    clon: i64,
+}
+
+impl<'a> Iterator for WayNodeLocationsIter<'a> {
+    type Item = WayNodeLocation;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match (self.dlats.next(), self.dlons.next()) {
+            (Some(&dlat), Some(&dlon)) => {
+                self.clat += dlat;
+                self.clon += dlon;
+                Some(WayNodeLocation {
+                    lat: self.block.get_lat_offset()
+                        + i64::from(self.block.get_granularity()) * self.clat,
+                    lon: self.block.get_lon_offset()
+                        + i64::from(self.block.get_granularity()) * self.clon,
+                })
+            }
+            _ => None,
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.dlats.size_hint()
+    }
+}
+
+impl<'a> ExactSizeIterator for WayNodeLocationsIter<'a> {}
+
 /// The element type of a relation member.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum RelMemberType {

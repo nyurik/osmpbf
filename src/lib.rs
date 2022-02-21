@@ -59,7 +59,7 @@ println!("Number of ways: {}", ways);
 # assert_eq!(ways, 1);
 # Ok::<(), std::io::Error>(())
 ```
-*/
+ */
 
 #![recursion_limit = "1024"]
 
@@ -81,6 +81,7 @@ pub mod indexed;
 pub mod mmap_blob;
 pub mod reader;
 mod util;
+mod write;
 
 mod proto {
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));

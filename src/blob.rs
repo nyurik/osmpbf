@@ -1,12 +1,14 @@
+#![allow(unused_variables, unused_must_use, dead_code)]
+
 //! Read and decode blobs
 
 use crate::block::{HeaderBlock, PrimitiveBlock};
 use crate::error::{new_blob_error, new_error, new_protobuf_error, BlobError, ErrorKind, Result};
 use crate::proto::fileformat;
 use crate::util::{parse_message_from_bytes, parse_message_from_reader};
-use byteorder::ReadBytesExt;
+use byteorder::{ReadBytesExt, WriteBytesExt};
 use std::fs::File;
-use std::io::{BufReader, Read, Seek, SeekFrom};
+use std::io::{BufReader, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
 #[cfg(feature = "system-libz")]
@@ -163,6 +165,63 @@ pub struct BlobReader<R: Read + Send> {
     /// Current reader offset in bytes from the start of the stream.
     offset: Option<ByteOffset>,
     last_blob_ok: bool,
+}
+
+/// A blob writer for PBF files.
+#[derive(Clone, Debug)]
+pub struct BlobWriter<W: Write + Send> {
+    writer: W,
+    // /// Current reader offset in bytes from the start of the stream.
+    // offset: Option<ByteOffset>,
+    // last_blob_ok: bool,
+}
+
+impl<W: Write + Send> BlobWriter<W> {
+    /// Creates a new `BlobWriter`.
+    ///
+    /// # Example
+    /// ```
+    /// use osmpbf::*;
+    ///
+    /// # fn foo() -> Result<()> {
+    /// let f = std::fs::File::create("tests/test.osm.pbf")?;
+    /// let buf_writer = std::io::BufWriter::new(f);
+    ///
+    /// let writer = BlobWriter::new(buf_writer);
+    ///
+    /// # Ok(())
+    /// # }
+    /// # foo().unwrap();
+    /// ```
+    pub fn new(writer: W) -> BlobWriter<W> {
+        BlobWriter {
+            writer,
+            // offset: None,
+            // last_blob_ok: true,
+        }
+    }
+
+    fn write_blob_header(&mut self, header: fileformat::BlobHeader) -> Result<()> {
+        let header_size = 0; // FIXME
+        if header_size >= MAX_BLOB_HEADER_SIZE {
+            return Err(new_blob_error(BlobError::HeaderTooBig {
+                size: header_size,
+            }));
+        }
+        self.writer
+            .write_u32::<byteorder::BigEndian>(header_size as u32);
+
+        // let header: fileformat::BlobHeader =
+        //     match parse_message_from_writeer(&mut self.writer.by_ref().take(header_size)) {
+        //         Ok(header) => header,
+        //         Err(e) => {
+        //             self.offset = None;
+        //             self.last_blob_ok = false;
+        //             return Some(Err(new_protobuf_error(e, "blob header")));
+        //         }
+        //     };
+        Ok(())
+    }
 }
 
 impl<R: Read + Send> BlobReader<R> {
