@@ -1,13 +1,16 @@
 //! `HeaderBlock`, `PrimitiveBlock` and `PrimitiveGroup`s
 
+use crate::bbox::Bbox;
 use crate::dense::DenseNodeIter;
 use crate::elements::{Element, Node, Relation, Way};
 use crate::error::{new_error, ErrorKind, Result};
 use crate::proto::osmformat;
+use crate::write::create_block::create_blob;
+use protobuf::{Message, RepeatedField};
 use std;
 
 /// A `HeaderBlock`. It contains metadata about following [`PrimitiveBlock`]s.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct HeaderBlock {
     header: osmformat::HeaderBlock,
 }
@@ -33,9 +36,23 @@ impl HeaderBlock {
         self.header.required_features.as_slice()
     }
 
+    /// Set required features that a parser needs to implement to parse the following
+    /// [`PrimitiveBlock`]s.
+    pub fn set_required_features(&mut self, values: Vec<String>) {
+        self.header
+            .set_required_features(RepeatedField::from_vec(values))
+    }
+
     /// Returns a list of optional features that a parser can choose to ignore.
     pub fn optional_features(&self) -> &[String] {
         self.header.optional_features.as_slice()
+    }
+
+    /// Set optional features that a parser needs to implement to parse the following
+    /// [`PrimitiveBlock`]s.
+    pub fn set_optional_features(&mut self, values: Vec<String>) {
+        self.header
+            .set_optional_features(RepeatedField::from_vec(values))
     }
 
     /// Returns the name of the program that generated the file or `None` if unset.
@@ -45,6 +62,28 @@ impl HeaderBlock {
         } else {
             None
         }
+    }
+
+    /// Set optional bounding box.
+    pub fn set_bbox(&mut self, value: Option<Bbox>) {
+        match value {
+            None => {
+                self.header.clear_bbox();
+            }
+            Some(value) => {
+                let mut bbox = osmformat::HeaderBBox::default();
+                bbox.set_left(value.left);
+                bbox.set_right(value.right);
+                bbox.set_top(value.top);
+                bbox.set_bottom(value.bottom);
+                self.header.set_bbox(bbox);
+            }
+        }
+    }
+
+    pub fn finalize(&self) -> Vec<u8> {
+        let raw_data = self.header.write_to_bytes().unwrap();
+        create_blob(raw_data, "OSMHeader")
     }
 }
 

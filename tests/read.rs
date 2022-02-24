@@ -1,10 +1,8 @@
-use assert_approx_eq::assert_approx_eq;
-use osmpbf::*;
+mod common;
 
-static REQ_SCHEMA_V6: &str = "OsmSchema-V0.6";
-static REQ_DENSE_NODES: &str = "DenseNodes";
-static REQ_HIST_INFO: &str = "HistoricalInformation";
-static OPT_LOC_ON_WAYS: &str = "LocationsOnWays";
+use assert_approx_eq::assert_approx_eq;
+use common::*;
+use osmpbf::*;
 
 struct TestFile {
     path: &'static str,
@@ -15,17 +13,17 @@ struct TestFile {
 static TEST_FILE_PATHS: &[TestFile; 3] = &[
     TestFile {
         path: "tests/test.osm.pbf",
-        req: &[REQ_SCHEMA_V6, REQ_DENSE_NODES],
+        req: &["OsmSchema-V0.6", "DenseNodes"],
         opt: &[],
     },
     TestFile {
         path: "tests/test_nozlib.osm.pbf",
-        req: &[REQ_SCHEMA_V6, REQ_DENSE_NODES],
+        req: &["OsmSchema-V0.6", "DenseNodes"],
         opt: &[],
     },
     TestFile {
         path: "tests/test_nozlib_nodense.osm.pbf",
-        req: &[REQ_SCHEMA_V6],
+        req: &["OsmSchema-V0.6"],
         opt: &[],
     },
 ];
@@ -34,7 +32,7 @@ static TEST_FILE_PATHS: &[TestFile; 3] = &[
 // https://osmcode.org/libosmium/
 static HISTORY_FILE_PATH: TestFile = TestFile {
     path: "tests/deleted_nodes.osh.pbf",
-    req: &[REQ_SCHEMA_V6, REQ_DENSE_NODES, REQ_HIST_INFO],
+    req: &["OsmSchema-V0.6", "DenseNodes", "HistoricalInformation"],
     opt: &[],
 };
 
@@ -42,8 +40,8 @@ static HISTORY_FILE_PATH: TestFile = TestFile {
 // osmium add-locations-to-ways -i flex_mem tests/test.osm.pbf -o tests/loc_on_ways.osm.pbf
 static LOC_ON_WAYS_FILE_PATH: TestFile = TestFile {
     path: "tests/loc_on_ways.osm.pbf",
-    req: &[REQ_SCHEMA_V6, REQ_DENSE_NODES],
-    opt: &[OPT_LOC_ON_WAYS],
+    req: &["OsmSchema-V0.6", "DenseNodes"],
+    opt: &["LocationsOnWays"],
 };
 
 // Helper functions to simplify testing
@@ -76,26 +74,17 @@ fn approx_eq(a: f64, b: f64) -> bool {
     (a - b).abs() < 1.0e-6
 }
 
-/// Ensure two vectors have the same values, ignoring their order
-fn is_same_unordered(a: &[&str], b: &[String]) -> bool {
-    let mut a = a.to_vec();
-    let mut b = b.to_vec();
-    a.sort_unstable();
-    b.sort_unstable();
-    a == b
-}
-
 // Compare the content of a HeaderBlock with known values from the test file.
 fn check_header_block_content(block: &HeaderBlock, test_file: &TestFile) {
     let res = block.required_features();
     assert!(
-        is_same_unordered(test_file.req, res),
+        is_same_unordered(res, test_file.req),
         "Required features {res:?} don't match expected {:?}",
         test_file.req
     );
     let res = block.optional_features();
     assert!(
-        is_same_unordered(test_file.opt, res),
+        is_same_unordered(res, test_file.opt),
         "Optional features {res:?} don't match expected {:?}",
         test_file.opt
     );

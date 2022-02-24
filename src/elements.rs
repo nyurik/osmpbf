@@ -1,5 +1,6 @@
 //! Nodes, ways and relations
 
+use itertools::Itertools;
 use crate::block::{get_stringtable_key_value, str_from_stringtable};
 use crate::dense::DenseNode;
 use crate::error::Result;
@@ -584,5 +585,145 @@ impl<'a> Info<'a> {
     /// This is a convenience function that just returns the inverse of [`Info::visible`].
     pub fn deleted(&self) -> bool {
         !self.visible()
+    }
+}
+
+/// A utility struct to construct a PBF delta-encoded sequence from an iterator.
+#[derive(Debug, Default)]
+pub struct DeltaEnc {
+    current: i64,
+}
+
+impl DeltaEnc {
+    pub fn encode(&mut self, value: i64) -> i64 {
+        let delta = value.checked_sub(self.current).unwrap();
+        self.current = value;
+        delta
+    }
+}
+
+/// A utility struct to construct a PBF delta-encoded sequence from an iterator.
+#[derive(Debug)]
+#[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
+pub struct DeltaEncoder<I: Iterator<Item=i64>> {
+    iter: I,
+    encoder: DeltaEnc,
+}
+
+impl<I> Iterator for DeltaEncoder<I> where I: Iterator<Item=i64> {
+    type Item = I::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.iter.next() {
+            Some(v) => { Some(self.encoder.encode(v)) }
+            None => None,
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.iter.size_hint()
+    }
+}
+
+trait DeltaEncoderExt: Iterator<Item=i64> {
+    fn as_deltas(self) -> DeltaEncoder<Self>
+        where Self: Sized
+    {
+        DeltaEncoder { iter: self, encoder: Default::default() }
+    }
+}
+
+impl<I> DeltaEncoderExt for I where I: Iterator<Item=i64> {}
+
+
+// impl<I> DeltaEncoder<I> where I: Iterator<Item=i64> {
+//     pub fn encode(values: I) -> Vec<i64> {
+//         let vals = Self { values: values, current: 0 };
+//         values.iter().collect()
+//     }
+// }
+
+// impl<I> Iterator for DeltaEncoder<I> where I: Iterator<Item=i64> {
+//     type Item = i64;
+//
+//     fn next(&mut self) -> Option<Self::Item> {
+//         match self.values.next() {
+//             Some(&d) => {
+//                 let delta = d - self.current;
+//                 self.current = d;
+//                 Some(delta)
+//             }values
+//             None => None,
+//         }
+//     }values
+//
+//     fn size_hint(&self) -> (usize, Option<usize>) {
+//         self.values.size_hint()
+//     }
+// }
+
+// impl<'a> DeltaEncoder<'a> {
+//     pub fn new(values: std::slice::Iter<'a, i64>) -> Self {
+//         Self { values, current: 0 }
+//     }
+//
+//     pub fn encode(values: std::slice::Iter<'a, i64>) -> Vec<i64> {
+//         Self::new(values).collect()
+//     }
+// }
+
+// impl<'a> Iterator for DeltaEncoder<'a> {
+//     type Item = i64;
+//
+//     fn next(&mut self) -> Option<Self::Item> {
+//         match self.values.next() {
+//             Some(&d) => {
+//                 let delta = d.checked_sub(self.current).unwrap();
+//                 self.current = d;
+//                 Some(delta)
+//             }
+//             None => None,
+//         }
+//     }
+//
+//     fn size_hint(&self) -> (usize, Option<usize>) {
+//         self.values.size_hint()
+//     }
+// }
+//
+#[cfg(test)]
+mod tests {
+    use std::slice::Iter;
+    use crate::{WayRefIter};
+    use crate::elements::DeltaEncoderExt;
+
+    fn run(vals: &[i64]) {
+        let encoded = vals.into_iter().as_deltas().collect();
+        let decoded: Vec<i64> = WayRefIter {
+            deltas: encoded.iter(),
+            current: 0,
+        }
+            .collect();
+        assert_eq!(decoded, vals, "Encoded={:?}", encoded);
+    }
+
+    #[test]
+    fn test() {
+        // Delta encoding cannot support deltas bigger than i64::MAX
+        let min = i64::MIN / 2;
+        let max = i64::MAX / 2;
+
+        run(&[]);
+        run(&[0]);
+        run(&[1]);
+        run(&[1, 2]);
+        run(&[1, -2]);
+        run(&[1, 3, 5]);
+        run(&[1, 3, 10]);
+        run(&[min]);
+        run(&[max]);
+        run(&[max, min]);
+        run(&[0, max]);
+        run(&[0, max, min, max]);
     }
 }

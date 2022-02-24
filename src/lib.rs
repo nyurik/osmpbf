@@ -71,6 +71,7 @@ pub use error::{BlobError, Error, ErrorKind, Result};
 pub use indexed::*;
 pub use mmap_blob::*;
 pub use reader::*;
+pub use write::*;
 
 pub mod blob;
 pub mod block;
@@ -79,8 +80,10 @@ pub mod elements;
 mod error;
 pub mod indexed;
 pub mod mmap_blob;
+mod proto;
 pub mod reader;
+pub mod write;
 
-mod proto {
-    include!(concat!(env!("OUT_DIR"), "/mod.rs"));
-}
+// pub mod proto {
+//     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
+// }
