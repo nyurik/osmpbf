@@ -84,7 +84,7 @@ fn is_same_unordered(a: &[&str], b: &[String]) -> bool {
     if a.len() == b.len() {
         let mut a = a.to_vec();
         let mut b = b.to_vec();
-        a.sort();
+        a.sort_unstable();
         b.sort();
         a.iter().zip(b.iter()).filter(|&(a, b)| a == b).count() == a.len()
     } else {
@@ -142,9 +142,9 @@ fn check_primitive_block_content(block: &PrimitiveBlock) {
         assert_eq!(nodes[1].info().uid(), Some(17));
         assert_eq!(nodes[2].info().uid(), Some(17));
 
-        assert_eq!(nodes[0].info().visible(), true);
-        assert_eq!(nodes[1].info().visible(), true);
-        assert_eq!(nodes[2].info().visible(), true);
+        assert!(nodes[0].info().visible());
+        assert!(nodes[1].info().visible());
+        assert!(nodes[2].info().visible());
     }
 
     let dense_nodes = block.t_dense_nodes();
@@ -195,9 +195,7 @@ fn check_primitive_block_content(block: &PrimitiveBlock) {
 
         let way_refs: Vec<_> = ways[0].refs().collect();
         assert_eq!(way_refs, [105, 106, 108, 105]);
-
-        let nodes: Vec<_> = ways[0].node_locations().collect();
-        assert_eq!(nodes.len(), 0);
+        assert_eq!(ways[0].node_locations().count(), 0);
     }
 
     {
@@ -225,7 +223,7 @@ fn read_blobs() {
         assert_eq!(blobs[1].get_type(), BlobType::OsmData);
 
         let header = blobs[0].to_headerblock().unwrap();
-        check_header_block_content(&header, &test_file);
+        check_header_block_content(&header, test_file);
 
         let primitive_block = blobs[1].to_primitiveblock().unwrap();
         check_primitive_block_content(&primitive_block);
@@ -245,7 +243,7 @@ fn read_mmap_blobs() {
         assert_eq!(blobs[1].get_type(), BlobType::OsmData);
 
         if let BlobDecode::OsmHeader(header) = blobs[0].decode().unwrap() {
-            check_header_block_content(&header, &test_file);
+            check_header_block_content(&header, test_file);
         } else {
             panic!("Unexpected blob type");
         }
@@ -312,11 +310,7 @@ fn read_ways_and_deps() {
 
         reader
             .read_ways_and_deps(
-                |way| {
-                    way.tags()
-                        .find(|&key_value| key_value == ("building", "yes"))
-                        .is_some()
-                },
+                |way| way.tags().any(|key_value| key_value == ("building", "yes")),
                 |element| {
                     match element {
                         Element::Way(_) => ways += 1,
@@ -350,8 +344,8 @@ fn read_history_file() {
 
     assert_eq!(nodes.len(), 2);
 
-    assert_eq!(nodes[0].info().unwrap().visible(), false);
-    assert_eq!(nodes[1].info().unwrap().visible(), true);
+    assert!(!nodes[0].info().unwrap().visible());
+    assert!(nodes[1].info().unwrap().visible());
 }
 
 #[test]
