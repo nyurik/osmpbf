@@ -85,7 +85,7 @@ fn is_same_unordered(a: &[&str], b: &[String]) -> bool {
         let mut a = a.to_vec();
         let mut b = b.to_vec();
         a.sort_unstable();
-        b.sort();
+        b.sort_unstable();
         a.iter().zip(b.iter()).filter(|&(a, b)| a == b).count() == a.len()
     } else {
         false
