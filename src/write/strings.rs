@@ -1,8 +1,14 @@
 use std::cmp::Ordering;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
+
 use protobuf::RepeatedField;
-use proto::osmformat::StringTable;
+
+use crate::dense::DenseNodeIter;
+use crate::elements::{Element, Node, Relation, Way};
+use crate::error::{ErrorKind, new_error, Result};
+use crate::proto::osmformat;
+use crate::proto::osmformat::{PrimitiveGroup, StringTable};
 
 /// A utility struct to construct a PBF string table.
 #[derive(Debug, Clone, Default)]
