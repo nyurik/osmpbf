@@ -2,8 +2,7 @@
 
 extern crate osmpbf;
 
-use osmpbf::{Element, ElementReader, IndexedReader};
-use std::error::Error;
+use osmpbf::{Element, ElementReader};
 
 fn main() {
     let arg = std::env::args_os()

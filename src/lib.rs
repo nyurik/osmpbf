@@ -82,7 +82,8 @@ pub mod mmap_blob;
 pub mod reader;
 mod util;
 mod write;
+mod proto;
 
-mod proto {
-    include!(concat!(env!("OUT_DIR"), "/mod.rs"));
-}
+// pub mod proto {
+//     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
+// }

@@ -2,13 +2,8 @@ use std::cmp::Ordering;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 
+use crate::proto::osmformat::StringTable;
 use protobuf::RepeatedField;
-
-use crate::dense::DenseNodeIter;
-use crate::elements::{Element, Node, Relation, Way};
-use crate::error::{ErrorKind, new_error, Result};
-use crate::proto::osmformat;
-use crate::proto::osmformat::{PrimitiveGroup, StringTable};
 
 /// A utility struct to construct a PBF string table.
 #[derive(Debug, Clone, Default)]
@@ -34,7 +29,13 @@ impl StringTableBuilder {
     pub fn add_string(&mut self, value: String) -> usize {
         let mut new_id = self.strings.len();
         if new_id == 0 {
-            self.strings.insert("".to_string(), StrInfo { index: 0, usage: u32::MAX / 2 });
+            self.strings.insert(
+                "".to_string(),
+                StrInfo {
+                    index: 0,
+                    usage: u32::MAX / 2,
+                },
+            );
             new_id += 1;
         }
 
@@ -51,7 +52,10 @@ impl StringTableBuilder {
             }
             Vacant(entry) => {
                 self.size += 2 + value_len;
-                entry.insert(StrInfo { index: new_id, usage: 1 });
+                entry.insert(StrInfo {
+                    index: new_id,
+                    usage: 1,
+                });
                 new_id
             }
         }
@@ -61,16 +65,17 @@ impl StringTableBuilder {
     /// The strings are sorted by usage count (desc) followed by string value (asc)
     /// Second result is a vector of indexes, mapping the index returned by [`add_string`]
     /// to the new position within the string table. 0-th element is always an empty string.
-    pub fn finalize(self) -> (StringTable, Vec::<usize>) {
+    pub fn finalize(self) -> (StringTable, Vec<usize>) {
         let mut items = self.strings.into_iter().collect::<Vec<_>>();
-        items.sort_unstable_by(|a, b| {
-            match b.1.usage.cmp(&a.1.usage) {
-                Ordering::Equal => { a.0.cmp(&b.0) }
-                v => { v }
-            }
+        items.sort_unstable_by(|a, b| match b.1.usage.cmp(&a.1.usage) {
+            Ordering::Equal => a.0.cmp(&b.0),
+            v => v,
         });
         let mut res = StringTable::default();
-        let strings = items.iter().map(|(v, _)| v.to_string().into_bytes()).collect();
+        let strings = items
+            .iter()
+            .map(|(v, _)| v.to_string().into_bytes())
+            .collect();
         res.set_s(RepeatedField::from_vec(strings));
         let indexes: Vec<_> = items.into_iter().map(|v| v.1.index).collect();
         (res, indexes)
