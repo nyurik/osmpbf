@@ -184,7 +184,7 @@ impl<W: Write + Send> BlobWriter<W> {
     /// use osmpbf::*;
     ///
     /// # fn foo() -> Result<()> {
-    /// let f = std::fs::File::create("tests/test.osm.pbf")?;
+    /// let f = std::fs::File::create("tests/write_test.osm.pbf")?;
     /// let buf_writer = std::io::BufWriter::new(f);
     ///
     /// let writer = BlobWriter::new(buf_writer);
