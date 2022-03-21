@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use protobuf::{Message, RepeatedField};
 use crate::proto::osmformat;
 use crate::proto::osmformat::{PrimitiveGroup, Way};
@@ -110,7 +112,6 @@ mod tests {
         let mut count = 0;
         reader.for_each(|e| {
             count += 1;
-            assert_eq!(count, 1);
             if let Element::Way(w) = e {
                 assert_eq!(w.id(), 42);
             } else {
