@@ -1,5 +1,6 @@
 //! `HeaderBlock`, `PrimitiveBlock` and `PrimitiveGroup`s
 
+use crate::bbox::Bbox;
 use crate::dense::DenseNodeIter;
 use crate::elements::{Element, Node, Relation, Way};
 use crate::error::{new_error, ErrorKind, Result};
@@ -26,6 +27,21 @@ impl HeaderBlock {
     /// Returns a list of optional features that a parser can choose to ignore.
     pub fn optional_features(&self) -> &[String] {
         self.header.get_optional_features()
+    }
+
+    /// Returns optional bounding box of the block.
+    pub fn bbox(&self) -> Option<Bbox> {
+        if self.header.has_bbox() {
+            let bbox = self.header.get_bbox();
+            Some(Bbox {
+                left: bbox.get_left(),
+                right: bbox.get_right(),
+                top: bbox.get_top(),
+                bottom: bbox.get_bottom(),
+            })
+        } else {
+            None
+        }
     }
 }
 

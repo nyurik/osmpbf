@@ -86,12 +86,12 @@ impl StringTableBuilder {
 mod tests {
     use super::*;
 
-    fn to_str(bytes: &Vec<u8>) -> String {
+    fn to_str(bytes: &[u8]) -> String {
         String::from_utf8(bytes.to_vec()).unwrap()
     }
 
     fn assert_eq_vec(actual: &[Vec<u8>], expected: Vec<&str>) {
-        let actual = actual.iter().map(to_str).collect::<Vec<_>>();
+        let actual = actual.iter().map(|v| to_str(v)).collect::<Vec<_>>();
         assert_eq!(actual, expected);
     }
 

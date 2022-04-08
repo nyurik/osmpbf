@@ -1,15 +1,16 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
+#![allow(unused_mut)]
 
-use std::convert::TryInto;
-use byteorder::{BigEndian, WriteBytesExt};
-use protobuf::{Message, RepeatedField};
-use crate::BlobHeader;
 use crate::proto::fileformat::Blob;
-use crate::proto::{fileformat, osmformat};
 use crate::proto::osmformat::{PrimitiveGroup, Way};
+use crate::proto::{fileformat, osmformat};
 use crate::write::bbox::Bbox;
 use crate::write::strings::StringTableBuilder;
+use crate::BlobHeader;
+use byteorder::{BigEndian, WriteBytesExt};
+use protobuf::{Message, RepeatedField};
+use std::convert::TryInto;
 
 fn create_blob(raw_data: Vec<u8>, typ: &str) -> Vec<u8> {
     let mut blob = fileformat::Blob::default();
@@ -23,9 +24,11 @@ fn create_blob(raw_data: Vec<u8>, typ: &str) -> Vec<u8> {
     // header.set_datasize(data.len() as i32);   //# 49
 
     let mut result: Vec<u8> = Vec::new();
-    result.write_i32::<BigEndian>(header.compute_size().try_into().unwrap());
-    header.write_to_vec(&mut result);
-    blob.write_to_vec(&mut result);
+    result
+        .write_i32::<BigEndian>(header.compute_size().try_into().unwrap())
+        .unwrap();
+    header.write_to_vec(&mut result).unwrap();
+    blob.write_to_vec(&mut result).unwrap();
     result
 }
 
@@ -51,7 +54,7 @@ pub struct HeaderBlock {
 }
 
 impl HeaderBlock {
-    pub fn as_mut(&mut self) -> &mut osmformat::HeaderBlock {
+    pub fn block_as_mut(&mut self) -> &mut osmformat::HeaderBlock {
         &mut self.block
     }
 
@@ -110,7 +113,8 @@ impl PrimitiveBlock {
         prim_grps.reserve(self.ways.len() + self.rels.len());
         prim_grps.extend(self.ways);
         prim_grps.extend(self.rels);
-        self.block.set_primitivegroup(RepeatedField::from_vec(prim_grps));
+        self.block
+            .set_primitivegroup(RepeatedField::from_vec(prim_grps));
         let raw_data = self.block.write_to_bytes().unwrap();
         create_blob(raw_data, "OSMData")
     }
@@ -132,11 +136,11 @@ impl PrimitiveBlock {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::proto::fileformat::Blob;
+    use crate::{BlobDecode, BlobReader, Element, ElementReader};
     use std::fs::read;
     use std::io::Cursor;
-    use crate::{BlobDecode, BlobReader, Element, ElementReader};
-    use crate::proto::fileformat::Blob;
-    use super::*;
 
     #[test]
     fn test_header() {
@@ -151,7 +155,7 @@ mod tests {
                     assert_unordered("Req", &[], h.required_features());
                     assert_unordered("Opt", &[], h.optional_features());
                 }
-                _ => panic!()
+                _ => panic!(),
             }
         }
     }
@@ -168,14 +172,16 @@ mod tests {
 
         let reader = ElementReader::new(Cursor::new(pbf));
         let mut count = 0;
-        reader.for_each(|e| {
-            count += 1;
-            if let Element::Way(w) = e {
-                assert_eq!(w.id(), 42);
-            } else {
-                assert!(false);
-            }
-        }).unwrap();
+        reader
+            .for_each(|e| {
+                count += 1;
+                if let Element::Way(w) = e {
+                    assert_eq!(w.id(), 42);
+                } else {
+                    panic!();
+                }
+            })
+            .unwrap();
         assert_eq!(count, 1);
     }
 

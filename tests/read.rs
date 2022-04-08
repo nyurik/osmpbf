@@ -1,10 +1,8 @@
-use assert_approx_eq::assert_approx_eq;
-use osmpbf::*;
+mod common;
 
-static REQ_SCHEMA_V6: &str = "OsmSchema-V0.6";
-static REQ_DENSE_NODES: &str = "DenseNodes";
-static REQ_HIST_INFO: &str = "HistoricalInformation";
-static OPT_LOC_ON_WAYS: &str = "LocationsOnWays";
+use assert_approx_eq::assert_approx_eq;
+use common::*;
+use osmpbf::*;
 
 struct TestFile {
     path: &'static str,
@@ -76,31 +74,18 @@ fn approx_eq(a: f64, b: f64) -> bool {
     (a - b).abs() < 1.0e-6
 }
 
-/// Ensure two vectors have the same values, ignoring their order
-fn is_same_unordered(a: &[&str], b: &[String]) -> bool {
-    if a.len() == b.len() {
-        let mut a = a.to_vec();
-        let mut b = b.to_vec();
-        a.sort_unstable();
-        b.sort_unstable();
-        a.iter().zip(b.iter()).filter(|&(a, b)| a == b).count() == a.len()
-    } else {
-        false
-    }
-}
-
 // Compare the content of a HeaderBlock with known values from the test file.
 fn check_header_block_content(block: &HeaderBlock, test_file: &TestFile) {
     let res = block.required_features();
     assert!(
-        is_same_unordered(test_file.req, res),
+        is_same_unordered(res, test_file.req),
         "Required features {:?} don't match expected {:?}",
         res,
         test_file.req
     );
     let res = block.optional_features();
     assert!(
-        is_same_unordered(test_file.opt, res),
+        is_same_unordered(res, test_file.opt),
         "Optional features {:?} don't match expected {:?}",
         res,
         test_file.opt

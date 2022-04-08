@@ -193,7 +193,7 @@ impl<W: Write + Send> BlobWriter<W> {
     /// # }
     /// # foo().unwrap();
     /// ```
-    pub fn new(writer: W) -> BlobWriter<W> {
+    pub fn new(writer: W) -> Self {
         BlobWriter {
             writer,
             // offset: None,
@@ -201,7 +201,7 @@ impl<W: Write + Send> BlobWriter<W> {
         }
     }
 
-    fn write_blob_header(&mut self, header: fileformat::BlobHeader) -> Result<()> {
+    pub fn write_blob_header(&mut self, header: fileformat::BlobHeader) -> Result<()> {
         let header_size = 0; // FIXME
         if header_size >= MAX_BLOB_HEADER_SIZE {
             return Err(new_blob_error(BlobError::HeaderTooBig {
@@ -266,7 +266,7 @@ impl<R: Read + Send> BlobReader<R> {
                         self.last_blob_ok = false;
                         Some(Err(new_blob_error(BlobError::InvalidHeaderSize)))
                     }
-                }
+                };
             }
         };
 

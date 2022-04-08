@@ -425,7 +425,7 @@ impl<'a> Iterator for WayNodeLocationsIter<'a> {
 impl<'a> ExactSizeIterator for WayNodeLocationsIter<'a> {}
 
 /// The element type of a relation member.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum RelMemberType {
     Node,
     Way,

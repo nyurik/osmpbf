@@ -1,3 +1,3 @@
-mod bbox;
-mod primitive_block;
-mod strings;
+pub mod bbox;
+pub mod primitive_block;
+pub mod strings;
