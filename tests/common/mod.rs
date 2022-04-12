@@ -2,13 +2,7 @@
 
 use osmpbf::bbox::Bbox;
 use osmpbf::{BlobDecode, BlobReader, PrimitiveGroup, RelMemberType};
-use std::fs::File;
-use std::io::BufReader;
-
-pub static REQ_SCHEMA_V6: &str = "OsmSchema-V0.6";
-pub static REQ_DENSE_NODES: &str = "DenseNodes";
-pub static REQ_HIST_INFO: &str = "HistoricalInformation";
-pub static OPT_LOC_ON_WAYS: &str = "LocationsOnWays";
+use std::io::Read;
 
 pub struct ExpHeader {
     pub req: Vec<&'static str>,
@@ -50,11 +44,15 @@ pub enum ExpBlob {
     Data(Vec<ExpGroup>),
 }
 
-pub fn assert_file_content(path: &str, expected_vals: Vec<ExpBlob>) {
+pub fn assert_file_content(path: &str, expected_vals: &[ExpBlob]) {
     assert_content(BlobReader::from_path(path).unwrap(), expected_vals)
 }
 
-fn assert_content(reader: BlobReader<BufReader<File>>, expected_vals: Vec<ExpBlob>) {
+pub fn assert_bytes<R: Read + Send>(reader: R, expected_vals: &[ExpBlob]) {
+    assert_content(BlobReader::new(reader), expected_vals)
+}
+
+pub fn assert_content<R: Read + Send>(reader: BlobReader<R>, expected_vals: &[ExpBlob]) {
     let mut expected_iter = expected_vals.into_iter();
     for (block_id, actual) in reader.into_iter().enumerate() {
         let expected = expected_iter
@@ -63,9 +61,9 @@ fn assert_content(reader: BlobReader<BufReader<File>>, expected_vals: Vec<ExpBlo
         match actual.unwrap().decode().unwrap() {
             BlobDecode::OsmHeader(hdr) => {
                 if let ExpBlob::Header(ExpHeader { req, opt, bbox }) = expected {
-                    sort_compare("Required features", hdr.required_features(), req);
-                    sort_compare("Optional features", hdr.optional_features(), opt);
-                    assert_eq!(hdr.bbox(), bbox, "Bounding box")
+                    sort_compare("Required features", hdr.required_features(), &req);
+                    sort_compare("Optional features", hdr.optional_features(), &opt);
+                    assert_eq!(&hdr.bbox(), bbox, "Bounding box")
                 } else {
                     panic!("Was expecting a header blob");
                 }
@@ -99,7 +97,7 @@ fn assert_content(reader: BlobReader<BufReader<File>>, expected_vals: Vec<ExpBlo
 
 fn assert_group(
     actual_group: PrimitiveGroup,
-    expected: ExpGroup,
+    expected: &ExpGroup,
     block_id: usize,
     group_id: usize,
 ) {
@@ -159,9 +157,9 @@ fn assert_group(
     );
 }
 
-fn sort_compare(name: &str, actual: &[String], expected: Vec<&str>) {
+fn sort_compare(name: &str, actual: &[String], expected: &[&str]) {
     assert!(
-        is_same_unordered(actual, expected.as_slice()),
+        is_same_unordered(actual, expected),
         "{} {:?} does not match expected {:?}",
         name,
         actual,
@@ -176,6 +174,18 @@ where
     tags.into_iter()
         .map(|(k, v)| (k.to_string(), v.to_string()))
         .collect()
+}
+
+pub fn to_header<T1, T2>(req: T1, opt: T2, bbox: Option<Bbox>) -> ExpBlob
+where
+    T1: IntoIterator<Item = &'static str>,
+    T2: IntoIterator<Item = &'static str>,
+{
+    ExpBlob::Header(ExpHeader {
+        req: req.into_iter().collect(),
+        opt: opt.into_iter().collect(),
+        bbox: bbox,
+    })
 }
 
 /// Ensure two vectors have the same values, ignoring their order

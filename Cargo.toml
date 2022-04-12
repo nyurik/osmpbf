@@ -1,7 +1,7 @@
 [package]
 name = "osmpbf"
 version = "0.2.7"
-authors = ["Johannes Hofmann <mail@b-r-u.org>"]
+authors = ["Johannes Hofmann <mail@b-r-u.org>", "Yuri Astrakhan <YuriAstrakhan@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/b-r-u/osmpbf"
 homepage = "https://github.com/b-r-u/osmpbf"

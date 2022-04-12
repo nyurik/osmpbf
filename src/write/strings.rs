@@ -15,7 +15,7 @@ pub struct StringTableBuilder {
 }
 
 #[derive(Debug, Clone)]
-struct StrInfo {
+pub struct StrInfo {
     /// a value that [`add_string`] returned.
     /// This is not the final value that will be used in the encoded PBF.
     index: usize,

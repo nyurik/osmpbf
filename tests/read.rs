@@ -13,17 +13,17 @@ struct TestFile {
 static TEST_FILE_PATHS: &[TestFile; 3] = &[
     TestFile {
         path: "tests/test.osm.pbf",
-        req: &[REQ_SCHEMA_V6, REQ_DENSE_NODES],
+        req: &["OsmSchema-V0.6", "DenseNodes"],
         opt: &[],
     },
     TestFile {
         path: "tests/test_nozlib.osm.pbf",
-        req: &[REQ_SCHEMA_V6, REQ_DENSE_NODES],
+        req: &["OsmSchema-V0.6", "DenseNodes"],
         opt: &[],
     },
     TestFile {
         path: "tests/test_nozlib_nodense.osm.pbf",
-        req: &[REQ_SCHEMA_V6],
+        req: &["OsmSchema-V0.6"],
         opt: &[],
     },
 ];
@@ -32,7 +32,7 @@ static TEST_FILE_PATHS: &[TestFile; 3] = &[
 // https://osmcode.org/libosmium/
 static HISTORY_FILE_PATH: TestFile = TestFile {
     path: "tests/deleted_nodes.osh.pbf",
-    req: &[REQ_SCHEMA_V6, REQ_DENSE_NODES, REQ_HIST_INFO],
+    req: &["OsmSchema-V0.6", "DenseNodes", "HistoricalInformation"],
     opt: &[],
 };
 
@@ -40,8 +40,8 @@ static HISTORY_FILE_PATH: TestFile = TestFile {
 // osmium add-locations-to-ways -i flex_mem tests/test.osm.pbf -o tests/loc_on_ways.osm.pbf
 static LOC_ON_WAYS_FILE_PATH: TestFile = TestFile {
     path: "tests/loc_on_ways.osm.pbf",
-    req: &[REQ_SCHEMA_V6, REQ_DENSE_NODES],
-    opt: &[OPT_LOC_ON_WAYS],
+    req: &["OsmSchema-V0.6", "DenseNodes"],
+    opt: &["LocationsOnWays"],
 };
 
 // Helper functions to simplify testing

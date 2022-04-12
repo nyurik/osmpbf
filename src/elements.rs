@@ -642,3 +642,110 @@ impl<'a> Info<'a> {
         !self.visible()
     }
 }
+
+/// A utility struct to construct a PBF delta-encoded sequence from an iterator.
+#[derive(Debug, Clone)]
+pub struct DeltaEncoder<'a> {
+    values: std::slice::Iter<'a, i64>,
+    current: i64,
+}
+// pub struct DeltaEncoder<I> where I: Iterator<Item=i64>+?Sized {
+//     values: I,
+//     current: i64,
+// }
+
+// trait DeltaEncoderExt: Iterator<Item=i64> {
+//     fn as_deltas(&self) -> DeltaEncoder<Self>{
+//         DeltaEncoder { values: self, current: 0 }
+//     }
+// }
+
+// impl<I> DeltaEncoder<I> where I: Iterator<Item=i64> {
+//     pub fn encode(values: I) -> Vec<i64> {
+//         let vals = Self { values: values, current: 0 };
+//         values.iter().collect()
+//     }
+// }
+
+// impl<I> Iterator for DeltaEncoder<I> where I: Iterator<Item=i64> {
+//     type Item = i64;
+//
+//     fn next(&mut self) -> Option<Self::Item> {
+//         match self.values.next() {
+//             Some(&d) => {
+//                 let delta = d - self.current;
+//                 self.current = d;
+//                 Some(delta)
+//             }values
+//             None => None,
+//         }
+//     }values
+//
+//     fn size_hint(&self) -> (usize, Option<usize>) {
+//         self.values.size_hint()
+//     }
+// }
+
+impl<'a> DeltaEncoder<'a> {
+    pub fn new(values: std::slice::Iter<'a, i64>) -> Self {
+        Self { values, current: 0 }
+    }
+
+    pub fn encode(values: std::slice::Iter<'a, i64>) -> Vec<i64> {
+        Self::new(values).collect()
+    }
+}
+
+impl<'a> Iterator for DeltaEncoder<'a> {
+    type Item = i64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.values.next() {
+            Some(&d) => {
+                let delta = d.checked_sub(self.current).unwrap();
+                self.current = d;
+                Some(delta)
+            }
+            None => None,
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.values.size_hint()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{DeltaEncoder, WayRefIter};
+
+    fn run(vals: &[i64]) {
+        let encoded = DeltaEncoder::encode(vals.iter());
+        let decoded: Vec<i64> = WayRefIter {
+            deltas: encoded.iter(),
+            current: 0,
+        }
+        .collect();
+        assert_eq!(decoded, vals, "Encoded={:?}", encoded);
+    }
+
+    #[test]
+    fn test() {
+        // Delta encoding cannot support deltas bigger than i64::MAX
+        let min = i64::MIN / 2;
+        let max = i64::MAX / 2;
+
+        run(&[]);
+        run(&[0]);
+        run(&[1]);
+        run(&[1, 2]);
+        run(&[1, -2]);
+        run(&[1, 3, 5]);
+        run(&[1, 3, 10]);
+        run(&[min]);
+        run(&[max]);
+        run(&[max, min]);
+        run(&[0, max]);
+        run(&[0, max, min, max]);
+    }
+}

@@ -18,37 +18,52 @@ impl Default for Bbox {
 }
 
 impl Bbox {
-    pub fn add_node(&mut self, x: i64, y: i64) {
-        if x < self.left {
-            self.left = x
+    pub fn add_node(&mut self, lat: i64, lon: i64) {
+        if lon < self.left {
+            self.left = lon;
         }
-        if x > self.right {
-            self.right = x
+        if lon > self.right {
+            self.right = lon;
         }
-        if y > self.top {
-            self.top = y
+        if lat > self.top {
+            self.top = lat;
         }
-        if y < self.bottom {
-            self.bottom = y
+        if lat < self.bottom {
+            self.bottom = lat;
         }
     }
 
-    pub fn add_node_list(&mut self, xs: &[i64], ys: &[i64]) {
-        for &x in xs {
+    pub fn add_node_list(&mut self, lats: &[i64], lons: &[i64]) {
+        for &x in lons {
             if x < self.left {
-                self.left = x
+                self.left = x;
             }
             if x > self.right {
-                self.right = x
+                self.right = x;
             }
         }
-        for &y in ys {
+        for &y in lats {
             if y > self.top {
-                self.top = y
+                self.top = y;
             }
             if y < self.bottom {
-                self.bottom = y
+                self.bottom = y;
             }
+        }
+    }
+
+    pub fn add_bbox(&mut self, bbox: Bbox) {
+        if bbox.left < self.left {
+            self.left = bbox.left;
+        }
+        if bbox.right > self.right {
+            self.right = bbox.right;
+        }
+        if bbox.top > self.top {
+            self.top = bbox.top;
+        }
+        if bbox.bottom < self.bottom {
+            self.bottom = bbox.bottom;
         }
     }
 
@@ -65,7 +80,7 @@ mod tests {
     fn test_bbox() {
         let mut bbox = Bbox::default();
         assert!(bbox.is_empty());
-        bbox.add_node(10, 20);
+        bbox.add_node(20, 10);
         assert!(!bbox.is_empty());
         assert_eq!(
             bbox,
@@ -76,7 +91,7 @@ mod tests {
                 bottom: 20
             }
         );
-        bbox.add_node(12, 25);
+        bbox.add_node(25, 12);
         assert_eq!(
             bbox,
             Bbox {
@@ -86,7 +101,7 @@ mod tests {
                 bottom: 20
             }
         );
-        bbox.add_node_list(&[14, 8], &[27, 23]);
+        bbox.add_node_list(&[27, 23], &[14, 8]);
         assert_eq!(
             bbox,
             Bbox {

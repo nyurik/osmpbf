@@ -6,12 +6,12 @@ use osmpbf::RelMemberType::*;
 fn deleted_nodes() {
     assert_file_content(
         "tests/deleted_nodes.osh.pbf",
-        vec![
-            ExpBlob::Header(ExpHeader {
-                req: vec![REQ_SCHEMA_V6, REQ_DENSE_NODES, REQ_HIST_INFO],
-                opt: vec![],
-                bbox: None,
-            }),
+        &[
+            to_header(
+                ["OsmSchema-V0.6", "DenseNodes", "HistoricalInformation"],
+                [],
+                None,
+            ),
             ExpBlob::Data(vec![ExpGroup {
                 nodes: vec![],
                 d_nodes: vec![
@@ -37,12 +37,8 @@ fn deleted_nodes() {
 fn loc_on_ways() {
     assert_file_content(
         "tests/loc_on_ways.osm.pbf",
-        vec![
-            ExpBlob::Header(ExpHeader {
-                req: vec![REQ_SCHEMA_V6, REQ_DENSE_NODES],
-                opt: vec![OPT_LOC_ON_WAYS],
-                bbox: None,
-            }),
+        &[
+            to_header(["OsmSchema-V0.6", "DenseNodes"], ["LocationsOnWays"], None),
             ExpBlob::Data(vec![ExpGroup {
                 nodes: vec![],
                 d_nodes: vec![],
@@ -77,12 +73,8 @@ fn loc_on_ways() {
 fn test() {
     assert_file_content(
         "tests/test.osm.pbf",
-        vec![
-            ExpBlob::Header(ExpHeader {
-                req: vec![REQ_SCHEMA_V6, REQ_DENSE_NODES],
-                opt: vec![],
-                bbox: None,
-            }),
+        &[
+            to_header(["OsmSchema-V0.6", "DenseNodes"], [], None),
             ExpBlob::Data(vec![
                 ExpGroup {
                     nodes: vec![],
@@ -136,12 +128,8 @@ fn test() {
 fn test_nozlib() {
     assert_file_content(
         "tests/test_nozlib.osm.pbf",
-        vec![
-            ExpBlob::Header(ExpHeader {
-                req: vec![REQ_SCHEMA_V6, REQ_DENSE_NODES],
-                opt: vec![],
-                bbox: None,
-            }),
+        &[
+            to_header(["OsmSchema-V0.6", "DenseNodes"], [], None),
             ExpBlob::Data(vec![
                 ExpGroup {
                     nodes: vec![],
@@ -195,12 +183,8 @@ fn test_nozlib() {
 fn test_nozlib_nodense() {
     assert_file_content(
         "tests/test_nozlib_nodense.osm.pbf",
-        vec![
-            ExpBlob::Header(ExpHeader {
-                req: vec![REQ_SCHEMA_V6],
-                opt: vec![],
-                bbox: None,
-            }),
+        &[
+            to_header(["OsmSchema-V0.6"], [], None),
             ExpBlob::Data(vec![
                 ExpGroup {
                     nodes: vec![
