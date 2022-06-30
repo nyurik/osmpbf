@@ -1,6 +1,5 @@
 //! Nodes, ways and relations
 
-use itertools::Itertools;
 use crate::block::{get_stringtable_key_value, str_from_stringtable};
 use crate::dense::DenseNode;
 use crate::error::Result;
@@ -605,7 +604,7 @@ impl DeltaEnc {
 /// A utility struct to construct a PBF delta-encoded sequence from an iterator.
 #[derive(Debug)]
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-pub struct DeltaEncoder<I: Iterator<Item=i64>> {
+pub struct DeltaEncoder<I> {  // I : Iterator<Item=i64>
     iter: I,
     encoder: DeltaEnc,
 }
@@ -634,7 +633,6 @@ trait DeltaEncoderExt: Iterator<Item=i64> {
 }
 
 impl<I> DeltaEncoderExt for I where I: Iterator<Item=i64> {}
-
 
 // impl<I> DeltaEncoder<I> where I: Iterator<Item=i64> {
 //     pub fn encode(values: I) -> Vec<i64> {
@@ -693,7 +691,6 @@ impl<I> DeltaEncoderExt for I where I: Iterator<Item=i64> {}
 //
 #[cfg(test)]
 mod tests {
-    use std::slice::Iter;
     use crate::{WayRefIter};
     use crate::elements::DeltaEncoderExt;
 

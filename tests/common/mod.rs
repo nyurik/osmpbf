@@ -184,7 +184,7 @@ where
     ExpBlob::Header(ExpHeader {
         req: req.into_iter().collect(),
         opt: opt.into_iter().collect(),
-        bbox: bbox,
+        bbox,
     })
 }
 
