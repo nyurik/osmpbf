@@ -6,7 +6,7 @@ use crate::elements::{Element, Node, Relation, Way};
 use crate::error::{new_error, ErrorKind, Result};
 use crate::proto::osmformat;
 use crate::write::create_block::create_blob;
-use protobuf::{Message, RepeatedField};
+use protobuf::Message;
 use std;
 
 /// A `HeaderBlock`. It contains metadata about following [`PrimitiveBlock`]s.

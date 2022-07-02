@@ -3,7 +3,6 @@ use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 
 use crate::proto::osmformat::StringTable;
-use protobuf::RepeatedField;
 
 /// A utility struct to construct a PBF string table.
 #[derive(Debug, Clone, Default)]

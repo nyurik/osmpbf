@@ -11,7 +11,7 @@ use crate::write::create_block;
 use crate::write::strings::StringTableBuilder;
 use crate::{elements, BlobHeader, DeltaEnc, DeltaEncoder, RelMemberType};
 use byteorder::{BigEndian, WriteBytesExt};
-use protobuf::{Message, RepeatedField};
+use protobuf::{Message};
 use std::convert::TryInto;
 
 #[derive(Debug, Clone, Copy, Default)]
