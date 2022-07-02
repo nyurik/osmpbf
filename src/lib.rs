@@ -80,10 +80,10 @@ pub mod elements;
 mod error;
 pub mod indexed;
 pub mod mmap_blob;
-mod proto;
 pub mod reader;
 pub mod write;
 
+mod proto;
 // pub mod proto {
 //     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 // }

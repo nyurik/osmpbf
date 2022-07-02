@@ -72,11 +72,10 @@ impl StringTableBuilder {
             v => v,
         });
         let mut res = StringTable::default();
-        let strings = items
+        res.s = items
             .iter()
             .map(|(v, _)| v.to_string().into_bytes())
             .collect();
-        res.set_s(RepeatedField::from_vec(strings));
         let indexes: Vec<_> = items.into_iter().map(|v| v.1.index).collect();
         (res, indexes)
     }

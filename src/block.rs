@@ -39,8 +39,7 @@ impl HeaderBlock {
     /// Set required features that a parser needs to implement to parse the following
     /// [`PrimitiveBlock`]s.
     pub fn set_required_features(&mut self, values: Vec<String>) {
-        self.header
-            .set_required_features(RepeatedField::from_vec(values))
+        self.header.required_features = values;
     }
 
     /// Returns a list of optional features that a parser can choose to ignore.
@@ -51,8 +50,7 @@ impl HeaderBlock {
     /// Set optional features that a parser needs to implement to parse the following
     /// [`PrimitiveBlock`]s.
     pub fn set_optional_features(&mut self, values: Vec<String>) {
-        self.header
-            .set_optional_features(RepeatedField::from_vec(values))
+        self.header.optional_features = values;
     }
 
     /// Returns the name of the program that generated the file or `None` if unset.
@@ -68,7 +66,7 @@ impl HeaderBlock {
     pub fn set_bbox(&mut self, value: Option<Bbox>) {
         match value {
             None => {
-                self.header.clear_bbox();
+                self.header.bbox.clear();
             }
             Some(value) => {
                 let mut bbox = osmformat::HeaderBBox::default();
@@ -76,7 +74,7 @@ impl HeaderBlock {
                 bbox.set_right(value.right);
                 bbox.set_top(value.top);
                 bbox.set_bottom(value.bottom);
-                self.header.set_bbox(bbox);
+                self.header.bbox.set_bbox(bbox);
             }
         }
     }

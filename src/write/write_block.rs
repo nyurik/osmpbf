@@ -4,7 +4,7 @@
 
 use crate::create_block::create_blob;
 use crate::proto::fileformat::Blob;
-use crate::proto::osmformat::{Node, PrimitiveGroup, Relation, Relation_MemberType, Way};
+use crate::proto::osmformat::{Node, PrimitiveGroup, Relation, Way};
 use crate::proto::{fileformat, osmformat};
 use crate::write::bbox::Bbox;
 use crate::write::create_block;
@@ -107,8 +107,7 @@ impl PrimitiveBlock {
         prim_grps.reserve(self.ways.len() + self.rels.len());
         prim_grps.extend(self.ways);
         prim_grps.extend(self.rels);
-        self.block
-            .set_primitivegroup(RepeatedField::from_vec(prim_grps));
+        self.block.primitivegroup = prim_grps;
         let raw_data = self.block.write_to_bytes().unwrap();
         create_blob(raw_data, "OSMData")
     }
@@ -228,7 +227,7 @@ impl PrimitiveBlock {
         for (role, member_id, member_type) in iter {
             role_sids.push(self.strings.add_string(role) as i32);
             member_ids.push(enc.encode(member_id));
-            member_types.push(osmformat::Relation_MemberType::from(member_type));
+            member_types.push(member_type);
         }
         rel.set_roles_sid(role_sids);
         rel.set_memids(member_ids);
